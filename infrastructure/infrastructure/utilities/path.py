@@ -19,7 +19,6 @@
 # http://numenta.org/licenses/
 # ----------------------------------------------------------------------
 
-import fcntl
 import os
 
 from contextlib import contextmanager
