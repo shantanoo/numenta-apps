@@ -205,9 +205,9 @@ def loadInstanceTags(instanceId,
 
   :rtype: boto instance tags object
 
-  :raises CommandFailedError if it can't find the instanceID
-  :raises InstanceNotFoundError if instanceId is not found in region
-  :raises InvalidParametersError if the arguments fail sanity check
+  :raises CommandFailedError: If it can't find the instanceID
+  :raises InstanceNotFoundError: If instanceId is not found in region
+  :raises InvalidParametersError: If the arguments fail sanity check
   """
   # Sanity check arguments
   if not logger:
