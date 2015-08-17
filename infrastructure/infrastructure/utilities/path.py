@@ -75,6 +75,7 @@ def purgeDirectory(path, whitelist=None, logger=None):
 
   :param logger: optional logging object
   """
+  # TODO: Validate that `whitelist` is list or tuple
   # Pylint didn't like a default argument of [] for whitelist
   if not whitelist:
     whitelist = []
@@ -84,7 +85,7 @@ def purgeDirectory(path, whitelist=None, logger=None):
 
   for thing in os.listdir(path):
     if thing not in whitelist:
-      rmrf("%s/%s" % (path, thing), logger=logger)
+      rmrf(os.path.join(path, thing), logger=logger)
     else:
       if logger:
         logger.debug("Retaining %s", thing)
