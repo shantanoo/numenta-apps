@@ -80,58 +80,46 @@ def prepareEnv(workspace, nupicBuildDir=None, environ=None):
 
   environ = environ or {}
 
-  env = dict(
-    HOME=environ.get("HOME"),
-    USER=environ.get("USER"),
-    BUILD_WORKSPACE=workspace,
-    REPOSITORY=os.path.join(nupicBuildDir or workspace, "nupic"),
-    PY_VERSION=sys.version[:3],
-    PRODUCTS=os.path.join(workspace, "products"),
-    GROK_HOME=os.path.join(workspace, "products", "grok"),
-    LD_LIBRARY_PATH=environ.get("LD_LIBRARY_PATH")
-  )
+  env = dict(HOME=environ.get("HOME"),
+             USER=environ.get("USER"),
+             BUILD_WORKSPACE=workspace,
+             REPOSITORY=os.path.join(nupicBuildDir or workspace, "nupic"),
+             PY_VERSION=sys.version[:3],
+             PRODUCTS=os.path.join(workspace, "products"),
+             GROK_HOME=os.path.join(workspace, "products", "grok"),
+             LD_LIBRARY_PATH=environ.get("LD_LIBRARY_PATH"))
 
-  env.update(
-    NUPIC=env["REPOSITORY"]
-  )
+  env.update(NUPIC=env["REPOSITORY"])
 
-  env.update(
-    NTA=os.path.join(env["NUPIC"], "build/release")
-  )
+  env.update(NTA=os.path.join(env["NUPIC"], "build/release"))
 
-  env.update(
-    PATH=prependPath(os.path.join(env["NTA"], "bin"), environ.get("PATH")),
-    PYTHONPATH=prependPath(os.path.join(env["NTA"], "lib/python%s/site-packages"
+  env.update(PATH=prependPath(os.path.join(env["NTA"], "bin"),
+                              environ.get("PATH")),
+             PYTHONPATH=prependPath(os.path.join(env["NTA"],
+                                                 "lib/python%s/site-packages" \
                                                     % env["PY_VERSION"]),
-                                                    environ.get("PYTHONPATH")),
-    NTA_ROOT_DIR=env["NTA"],
-    NTA_DATA_PATH=os.path.join(env["NTA"], "share/prediction/data"),
-    APPLICATION_CONFIG_PATH=os.path.join(env["GROK_HOME"], "conf")
-  )
+                                    environ.get("PYTHONPATH")),
+             NTA_ROOT_DIR=env["NTA"],
+             NTA_DATA_PATH=os.path.join(env["NTA"], "share/prediction/data"),
+             APPLICATION_CONFIG_PATH=os.path.join(env["GROK_HOME"], "conf"))
 
-  env.update(
-    PYTHONPATH=prependPath(env["NTA"], env["PYTHONPATH"])
-  )
+  env.update(PYTHONPATH=prependPath(env["NTA"], env["PYTHONPATH"]))
 
-  env.update(
-    PATH=prependPath(os.path.join(env["GROK_HOME"], "bin"), env["PATH"]),
-    PYTHONPATH=prependPath(os.path.join(env["GROK_HOME"],
-                           "lib/python%s/site-packages" % env["PY_VERSION"]),
-                           env["PYTHONPATH"])
-  )
+  env.update(PATH=prependPath(os.path.join(env["GROK_HOME"], "bin"),
+                              env["PATH"]),
+             PYTHONPATH=prependPath(os.path.join(env["GROK_HOME"],
+                                                 "lib/python%s/site-packages" \
+                                                   % env["PY_VERSION"]),
+                                    env["PYTHONPATH"]))
 
   if "darwin" in sys.platform:
-    env.update(
-      ARCHFLAGS="-arch x86_64",
-      MACOSX_DEPLOYMENT_TARGET="10.10"
-  )
+    env.update(ARCHFLAGS="-arch x86_64",
+               MACOSX_DEPLOYMENT_TARGET="10.10")
 
   if "centos" in platform.platform():
-    env.update(
-      CPP="/opt/rh/devtoolset-2/root/usr/bin/cpp",
-      CXX="/opt/rh/devtoolset-2/root/usr/bin/c++",
-      CC="/opt/rh/devtoolset-2/root/usr/bin/gcc"
-    )
+    env.update(CPP="/opt/rh/devtoolset-2/root/usr/bin/cpp",
+               CXX="/opt/rh/devtoolset-2/root/usr/bin/c++",
+               CC="/opt/rh/devtoolset-2/root/usr/bin/gcc")
   return env
 
 
@@ -147,6 +135,4 @@ def addNupicCoreToEnv(env, nupicCoreDir):
 
     :rtype: dict
   """
-  env.update(
-    NUPIC_CORE_DIR=nupicCoreDir,
-  )
+  env.update(NUPIC_CORE_DIR=nupicCoreDir)
