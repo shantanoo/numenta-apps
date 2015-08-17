@@ -215,9 +215,9 @@ def loadInstanceTags(instanceId,
   if not awsSecretAccessKey:
     raise InvalidParametersError("loadInstanceTags:Missing awsSecretAccessKey")
 
-  ec2Config = { "AWS_ACCESS_KEY_ID": awsAccessKeyId,
-                "AWS_SECRET_ACCESS_KEY": awsSecretAccessKey,
-                "REGION": region }
+  ec2Config = {"AWS_ACCESS_KEY_ID": awsAccessKeyId,
+               "AWS_SECRET_ACCESS_KEY": awsSecretAccessKey,
+               "REGION": region}
 
   conn = getEC2Connection(config=ec2Config)
 
