@@ -33,7 +33,7 @@ def changeToWorkingDir(path):
   Change into destination path, yield
   context, and finally change back to original path
 
-  @param path: The path to change to.
+  :param path: The path to change to.
   """
   original = os.getcwd()
   os.chdir(path)
@@ -48,12 +48,12 @@ def rmrf(path, logger=None):
   you have to use different calls if a path points to a directory or file,
   which bloats the code.
 
-  @note: This behaves like `rm -rf` and will not complain if the directory
-  isn't empty, it will delete it and the contents anyway.
+  :note: This behaves like `rm -rf` and will not complain if the directory
+         isn't empty, it will delete it and the contents anyway.
 
-  @param path: path to file/directory you want deleted.
+  :param path: path to file/directory you want deleted.
 
-  @param logger: optional logging object
+  :param logger: optional logging object
   """
   if logger:
     logger.debug("removing %s", path)
@@ -70,11 +70,11 @@ def purgeDirectory(path, whitelist=None, logger=None):
 
   If whitelist is None, purge everything.
 
-  @param path - path to purge
+  :param path: path to purge
 
-  @param whitelist - allowed files/directories to keep
+  :param whitelist: allowed files/directories to keep
 
-  @param logger: optional logging object
+  :param logger: optional logging object
   """
   # Pylint didn't like a default argument of [] for whitelist
   if not whitelist:
