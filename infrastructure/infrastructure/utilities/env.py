@@ -91,25 +91,26 @@ def prepareEnv(workspace, nupicBuildDir=None, environ=None):
 
   env.update(NUPIC=env["REPOSITORY"])
 
-  env.update(NTA=os.path.join(env["NUPIC"], "build/release"))
+  env.update(NTA=os.path.join(env["NUPIC"], "build", "release"))
 
   env.update(PATH=prependPath(os.path.join(env["NTA"], "bin"),
                               environ.get("PATH")),
-             PYTHONPATH=prependPath(os.path.join(env["NTA"],
-                                                 "lib/python%s/site-packages" \
-                                                    % env["PY_VERSION"]),
+             PYTHONPATH=prependPath(os.path.join(env["NTA"], "lib",
+                                                 "python%s" % env["PY_VERSION"],
+                                                 "site-packages"),
                                     environ.get("PYTHONPATH")),
              NTA_ROOT_DIR=env["NTA"],
-             NTA_DATA_PATH=os.path.join(env["NTA"], "share/prediction/data"),
+             NTA_DATA_PATH=os.path.join(env["NTA"], "share", "prediction",
+                                        "data"),
              APPLICATION_CONFIG_PATH=os.path.join(env["GROK_HOME"], "conf"))
 
   env.update(PYTHONPATH=prependPath(env["NTA"], env["PYTHONPATH"]))
 
   env.update(PATH=prependPath(os.path.join(env["GROK_HOME"], "bin"),
                               env["PATH"]),
-             PYTHONPATH=prependPath(os.path.join(env["GROK_HOME"],
-                                                 "lib/python%s/site-packages" \
-                                                   % env["PY_VERSION"]),
+             PYTHONPATH=prependPath(os.path.join(env["GROK_HOME"], "lib",
+                                                 "python%s" % env["PY_VERSION"],
+                                                 "site-packages"),
                                     env["PYTHONPATH"]))
 
   if "darwin" in sys.platform:
