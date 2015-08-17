@@ -84,7 +84,8 @@ def prepareEnv(workspace, nupicBuildDir=None, environ=None):
              USER=environ.get("USER"),
              BUILD_WORKSPACE=workspace,
              REPOSITORY=os.path.join(nupicBuildDir or workspace, "nupic"),
-             PY_VERSION=sys.version[:3],
+             PY_VERSION="%s.%s" % (sys.version_info.major,
+                                   sys.version_info.minor),
              PRODUCTS=os.path.join(workspace, "products"),
              GROK_HOME=os.path.join(workspace, "products", "grok"),
              LD_LIBRARY_PATH=environ.get("LD_LIBRARY_PATH"))
