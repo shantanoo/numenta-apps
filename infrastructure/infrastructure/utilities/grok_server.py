@@ -24,10 +24,9 @@ from time import sleep
 from fabric.api import run, settings
 from grokcli.api import GrokSession
 
-from infrastructure.utilities.exceptions import (
-  GrokConfigError,
-  InstanceLaunchError,
-  InstanceNotReadyError)
+from infrastructure.utilities.exceptions import (GrokConfigError,
+                                                 InstanceLaunchError,
+                                                 InstanceNotReadyError)
 
 GROK_AWS_CREDENTIALS_SETUP_TRIES = 30
 MAX_RETRIES_FOR_INSTANCE_READY = 18
@@ -133,8 +132,8 @@ def waitForGrokServerToBeReady(publicDnsName, serverKey, user, logger):
     else:
       raise InstanceNotReadyError("Grok services not ready on server %s after "
                                   "%d seconds." % (publicDnsName,
-                                                MAX_RETRIES_FOR_INSTANCE_READY *
-                                                SLEEP_DELAY))
+                                                   MAX_RETRIES_FOR_INSTANCE_READY
+                                                   * SLEEP_DELAY))
 
 
 def setupGrokAWSCredentials(publicDnsName, config):
@@ -152,10 +151,8 @@ def setupGrokAWSCredentials(publicDnsName, config):
 
     :returns: The API Key of the Grok server
   """
-  credentials = {
-    "aws_access_key_id": config["AWS_ACCESS_KEY_ID"],
-    "aws_secret_access_key": config["AWS_SECRET_ACCESS_KEY"]
-  }
+  credentials = {"aws_access_key_id": config["AWS_ACCESS_KEY_ID"],
+                 "aws_secret_access_key": config["AWS_SECRET_ACCESS_KEY"]}
   server = "https://%s" % publicDnsName
   grok = GrokSession(server=server)
   grok.apikey = grok.verifyCredentials(**credentials)
