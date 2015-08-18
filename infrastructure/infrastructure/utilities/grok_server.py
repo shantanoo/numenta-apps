@@ -42,7 +42,7 @@ def checkGrokServicesStatus(logger):
 
     :param logger: Initialized logger
 
-    :raises: infrastructure.utilities.exceptions.InstanceLaunchError
+    :raises infrastructure.utilities.exceptions.InstanceLaunchError:
       If a Grok service fails to startup.
 
     :returns: True if GrokServices are running properly.
@@ -72,7 +72,7 @@ def checkNginxStatus(logger):
 
     :param logger: Initialized logger
 
-    :raises: infrastructure.utilities.exceptions.InstanceLaunchError
+    :raises infrastructure.utilities.exceptions.InstanceLaunchError:
       If Nginx starts up using the error configuration.
 
     :returns: True if Nginx is running using the correct conf file for Grok.
@@ -105,8 +105,7 @@ def waitForGrokServerToBeReady(publicDnsName, serverKey, user, logger):
 
     :param logger: Initialized logger
 
-    :raises:
-      infrastructure.utilities.exceptions.InstanceNotReadyError
+    :raises infrastructure.utilities.exceptions.InstanceNotReadyError:
       If either Grok or Nginx fails to come up properly in the prescribed time.
 
     :raises infrastructure.utilities.exceptions.InstanceLaunchError:
@@ -146,7 +145,7 @@ def setupGrokAWSCredentials(publicDnsName, config):
     :param config: A dict containing values for `AWS_ACCESS_KEY_ID`
       and `AWS_SECRET_ACCESS_KEY`
 
-    :raises: infrastructure.utilities.exceptions.GrokConfigError if
+    :raises infrastructure.utilities.exceptions.GrokConfigError: if
       it is unable to obtain the API Key
 
     :returns: The API Key of the Grok server
@@ -192,6 +191,5 @@ def getApiKey(instanceId, publicDnsName, config, logger):
       break
     sleep(SLEEP_DELAY)
   else:
-    raise GrokConfigError("Failed to get API Key for instance %s" %
-                          instanceId)
+    raise GrokConfigError("Failed to get API Key for instance %s" % instanceId)
   return grokApiKey
