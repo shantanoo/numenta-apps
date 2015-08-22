@@ -5,15 +5,15 @@
 # following terms and conditions apply:
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 3 as
+# it under the terms of the GNU Affero Public License version 3 as
 # published by the Free Software Foundation.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the GNU General Public License for more details.
+# See the GNU Affero Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
+# You should have received a copy of the GNU Affero Public License
 # along with this program.  If not, see http://www.gnu.org/licenses.
 #
 # http://numenta.org/licenses/
@@ -28,8 +28,11 @@ from datetime import datetime
 import json
 import logging
 from optparse import OptionParser
+import os
 import pkg_resources
+import random
 import sys
+import traceback
 
 import validictory
 
@@ -45,6 +48,17 @@ from htmengine.algorithms.modelSelection.clusterParams import (
 
 g_log = logging.getLogger(__name__)
 
+# TODO: figure out where our logs will go (should probably be a file since we
+# use all stdio pipes for the protocol interface).
+g_log.addHandler(logging.NullHandler())
+
+
+
+class _CommandLineArgError(Exception):
+  """ Error parsing command-line options """
+  pass
+
+
 
 
 class _Options(object):
@@ -57,7 +71,8 @@ class _Options(object):
   def __init__(self, modelId, stats):
     """
     :param str modelId: model identifier
-    :param dict stats: Metric data stats per engine/stats_schema.json.
+    :param dict stats: Metric data stats per stats_schema.json in the
+      unicorn_backend package
     """
     self.modelId = modelId
     self.stats = stats
@@ -68,12 +83,18 @@ def _parseArgs():
   """ Parse command-line args
 
   :rtype: _Options object
+  :raises _CommandLineArgError: on command-line arg error
   """
+  class MyOptionParser(OptionParser):
+    def error(self, msg):
+      """Override `error()` to prevent unstructured output to stderr"""
+      raise _CommandLineArgError(msg)
+
   helpString = (
     "%prog [options]\n\n"
-    "Start Unicorn Engine that runs a single model.")
+    "Start Unicorn ModelRunner that runs a single model.")
 
-  parser = OptionParser(helpString)
+  parser = MyOptionParser(helpString)
 
   parser.add_option(
     "--model",
@@ -87,7 +108,7 @@ def _parseArgs():
     action="store",
     type="string",
     dest="stats",
-    help=("Required: see engine/stats_schema.json"))
+    help=("Required: see unicorn_backend/stats_schema.json"))
 
 
   options, positionalArgs = parser.parse_args()
@@ -115,6 +136,7 @@ def _parseArgs():
 
 
 
+
 class _Anomalizer(object):
   """ This class is responsible for anomaly likelihood processing. Its instance
   maintains a buffer of results (of the necessary window size) and anomaly state
@@ -128,6 +150,12 @@ class _Anomalizer(object):
   TODO Flesh me out
   """
 
+
+  def __init__(self):
+    # For returning dummy anomaly likelihood values
+    self._random = random.Random()
+
+
   def process(self, timestamp, metricValue, rawAnomalyScore):
     """ Perform anomaly likelihood processing
 
@@ -138,7 +166,13 @@ class _Anomalizer(object):
     :returns: anomaly likelihood value
     :rtype: float
     """
-    pass
+    # Make pylint happy until this function is properly fleshed out
+    timestamp = timestamp
+    metricValue = metricValue
+    rawAnomalyScore = rawAnomalyScore
+
+    # Return dummy anomaly likelihood value
+    return self._random.random()
 
 
 
@@ -161,7 +195,8 @@ class _ModelRunner(object):
   def __init__(self, modelId, stats):
     """
     :param str modelId: model identifier
-    :param dict stats: Metric data stats per engine/stats_schema.json.
+    :param dict stats: Metric data stats per stats_schema.json in the
+      unicorn_backend package.
     """
     self._modelId = modelId
 
@@ -179,21 +214,47 @@ class _ModelRunner(object):
   def _createModel(cls, stats):
     """Instantiate and configure an OPF model
 
-    :param dict stats: Metric data stats per engine/stats_schema.json.
+    :param dict stats: Metric data stats per stats_schema.json in the
+      unicorn_backend package.
     :returns: OPF Model instance
     """
-    # Generate swarm params
-    possibleModels = getScalarMetricWithTimeOfDayParams(
-      metricData=[0],
-      minVal=stats["min"],
-      maxVal=stats["max"],
-      minResolution=stats.get("minResolution"))
 
-    swarmParams = possibleModels[0]
+    # TODO remove the "DummyModel" code path once the ILLEGAL INSTRUCTION issue
+    # in nupic is resolved;
+    # Create a dummy model instead of a real one temporarily, while we're
+    # having trouble with the latest nupic builds on the Mac OS Yosemite that
+    # result in ILLEGAL INSTRUCTION in nupic.bindings. This is good enough for
+    # now to enable FrontEnd development.
+    if False:
+      class DummyModel(object):
+        class Result(object):
+          def __init__(self, inferences):
+            self.inferences = inferences
 
-    model = ModelFactory.create(modelConfig=swarmParams["modelConfig"])
-    model.enableLearning()
-    model.enableInference(swarmParams["inferenceArgs"])
+        def run(self, inputRecord):
+          inputRecord = inputRecord
+          return self.Result(dict(anomalyScore=0.9999))
+
+      return DummyModel()
+
+    else:
+      # THIS IS THE CORRECT PRODUCTION CODE that is failing with ILLEGAL
+      # INSTRUCTION in  ModelFactory.create on my Mac OS Yosemite laptop.
+
+      # Generate swarm params
+      possibleModels = getScalarMetricWithTimeOfDayParams(
+        metricData=[0],
+        minVal=stats["min"],
+        maxVal=stats["max"],
+        minResolution=stats.get("minResolution"))
+
+      swarmParams = possibleModels[0]
+
+      model = ModelFactory.create(modelConfig=swarmParams["modelConfig"])
+      model.enableLearning()
+      model.enableInference(swarmParams["inferenceArgs"])
+
+      return model
 
 
   @classmethod
@@ -271,25 +332,27 @@ def main():
     _ModelRunner(modelId=options.modelId, stats=options.stats).run()
 
   except Exception as ex:  # pylint: disable=W0703
-    g_log.exception("Engine failed")
+    g_log.exception("ModelRunner failed")
+
+    errorMessage = {
+      "errorText": str(ex) or repr(ex),
+      "diagnosticInfo": traceback.format_exc()
+    }
+
+    errorMessage = "%s\n" % (json.dumps(errorMessage))
 
     try:
-      # Preserve the original exception context
-      raise
-    finally:
+      sys.stderr.write(errorMessage)
+      sys.stderr.flush()
+    except Exception:  # pylint: disable=W0703
+      g_log.exception("Failed to emit error message to stderr; msg=%s",
+                      errorMessage)
 
-      errorMessage = {
-        "errorText": str(ex) or repr(ex),
-        "diagnosticInfo": repr(ex)
-      }
-
-      errorMessage = "%s\n" % (json.dumps(errorMessage))
-
-      try:
-        sys.stderr.write(errorMessage)
-      except Exception:  # pylint: disable=W0703
-        g_log.exception("Failed to emit error message to stderr; msg=%s",
-                        errorMessage)
+    # Use os._exit to abort the process instead of an exception to prevent
+    # the python runtime from dumpting traceback to stderr (since we dump a json
+    # message to stderr, and don't want the extra text to interfere with parsing
+    # in the Front End)
+    os._exit(1)  # pylint: disable=W0212
 
 
 

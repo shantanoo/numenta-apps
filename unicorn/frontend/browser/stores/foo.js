@@ -4,15 +4,15 @@
  * following terms and conditions apply:
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3 as published by
+ * under the terms of the GNU Affero Public License version 3 as published by
  * the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero Public License for
  * more details.
  *
- * You should have received a copy of the GNU General Public License along with
+ * You should have received a copy of the GNU Affero Public License along with
  * this program. If not, see http://www.gnu.org/licenses.
  *
  * http://numenta.org/licenses/
@@ -22,9 +22,34 @@
 
 
 /**
- * Fluxible Action: Foo
+ * Fluxible Store: Foo
  */
 
-module.exports = (actionContext, payload) => {
-  actionContext.dispatch('FOO_ACTION', payload);
-};
+// externals
+
+import FluxibleAddons from 'fluxible/addons';
+
+// internals
+
+let { createStore } = FluxibleAddons;
+
+
+// MAIN
+
+module.exports = createStore({
+  storeName: 'FooStore',
+  handlers: {
+    'FOO_ACTION': 'fooHandler'
+  },
+  initialize: function () {
+    this.foo = null;
+  },
+  fooHandler: function (payload) {
+    this.foo = payload;
+  },
+  getState: function () {
+    return {
+      foo: this.foo
+    };
+  }
+});

@@ -5,15 +5,15 @@
 # following terms and conditions apply:
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 3 as
+# it under the terms of the GNU Affero Public License version 3 as
 # published by the Free Software Foundation.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the GNU General Public License for more details.
+# See the GNU Affero Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
+# You should have received a copy of the GNU Affero Public License
 # along with this program.  If not, see http://www.gnu.org/licenses.
 #
 # http://numenta.org/licenses/
@@ -25,7 +25,7 @@ import time
 
 from subprocess import CalledProcessError, check_call, check_output
 
-from infrastructure.utilities import logger as diagnostics
+from infrastructure.utilities import diagnostics
 from infrastructure.utilities.exceptions import CommandFailedError
 
 
@@ -65,7 +65,7 @@ def executeCommand(command, env=None, logger=None):
     raise CommandFailedError(errMessage)
 
 
-def runWithRetries(command, retries=1, delay=1, logger=None):
+def runWithRetries(command, retries=1, delay=1, logger=None, env=None):
   """
   Run a command up to retries times until it succeeds.
 
@@ -82,11 +82,13 @@ def runWithRetries(command, retries=1, delay=1, logger=None):
   @raises infrastructure.utilities.exceptions.CommandFailedError
   if the command doesn't succeed after trying retries times
   """
+  if env is None:
+    env = os.environ
   attempts = 0
   while attempts < retries:
     attempts = attempts + 1
     try:
-      runWithOutput(command, printEnv=printEnv, logger=logger)
+      runWithOutput(command=command, env=env, logger=logger)
       return
     except CommandFailedError:
       if logger is not None:
@@ -119,8 +121,8 @@ def runWithOutput(command, env=None, logger=None):
     if isinstance(command, basestring):
       command = command.strip().split(" ")
     check_call(command, env=env)
-  except CalledProcessError:
-    errMessage = "Failed to execute: %s" % (command,)
+  except CalledProcessError as e:
+    errMessage = "Failed to execute: %s; original=%r" % (command, e,)
     raise CommandFailedError(errMessage)
   # Catch other exceptions, add info about what command triggered them
   except Exception as e:
