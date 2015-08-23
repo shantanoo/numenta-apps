@@ -29,7 +29,7 @@ from optparse import OptionParser
 import pytest
 
 
-def collect_set(option, opt_str, value, parser):
+def collectSet(option, opt_str, value, parser):
   """ Collect multiple option values into a single set.  Used in conjunction
   with callback argument to OptionParser.add_option().
   """
@@ -46,7 +46,7 @@ def collect_set(option, opt_str, value, parser):
   setattr(parser.values, option.dest, value)
 
 
-def collect_list(option, opt_str, value, parser):
+def collectList(option, opt_str, value, parser):
   """ Collect multiple option values into a single list.  Used in conjunction
   with callback argument to OptionParser.add_option().
   """
@@ -101,12 +101,12 @@ parser.add_option(
   "--results",
   dest="results",
   action="callback",
-  callback=collect_list)
+  callback=collectList)
 parser.add_option(
   "-s",
   dest="tests",
   action="callback",
-  callback=collect_set)
+  callback=collectSet)
 parser.add_option(
   "-l", "--language",
   default=None,
@@ -136,8 +136,8 @@ def main(parser, parse_args):
   # Extensions to test spec (args not part of official test runner)
 
   parser.add_option("-v", "--verbose",
-    action="store_true",
-    dest="verbose")
+                    action="store_true",
+                    dest="verbose")
 
   # Parse CLI args
 
@@ -160,7 +160,7 @@ def main(parser, parse_args):
   if options.results is not None:
     results = options.results[:2]
 
-    format = results.pop(0)
+    results.pop(0)
 
     if results:
       runid = results.pop(0)
