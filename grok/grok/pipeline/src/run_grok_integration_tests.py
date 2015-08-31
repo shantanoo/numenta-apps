@@ -88,7 +88,7 @@ def prepareResultsDir():
     :returns: The full path of the results directory
     :rtype: String
   """
-  resultsDir = os.path.join(getWorkspace(), "results")
+  resultsDir = os.path.join(getWorkspace(logger=g_logger), "results")
   if not os.path.exists(resultsDir):
     os.makedirs(resultsDir)
   return resultsDir
@@ -201,7 +201,8 @@ def main():
       g_logger.info("Tests have finished.")
 
       # Rename the results file to be job specific
-      newResultsFile = "grok_integration_test_results_%s.xml" % getBuildNumber()
+      newResultsFile = "grok_integration_test_results_%s.xml" % \
+        getBuildNumber(logger=g_logger)
       if os.path.exists(os.path.join(resultsDir, "results.xml")):
         shutil.move(os.path.join(resultsDir, "results.xml"),
                     os.path.join(resultsDir, newResultsFile))

@@ -47,7 +47,7 @@ def prepareResultsDir():
     :returns: The full path of the results directory
     :rtype: String
   """
-  resultsDir = os.path.join(getWorkspace(), "results")
+  resultsDir = os.path.join(getWorkspace(logger=g_logger), "results")
   if not os.path.exists(resultsDir):
     os.makedirs(resultsDir)
   return resultsDir
@@ -134,7 +134,7 @@ def recordXunitTestsResults():
   """
   jobResultsDir = os.path.join(os.environ["BUILD_WORKSPACE"], "products")
   masterResults = prepareResultsDir()
-  jobNumber = getBuildNumber()
+  jobNumber = getBuildNumber(logger=g_logger)
 
   def attemptResultUpdate(task):
     originalResultsFile = "%s_unit_test_results.xml" % task
