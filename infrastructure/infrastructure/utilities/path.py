@@ -19,10 +19,7 @@
 # http://numenta.org/licenses/
 # ----------------------------------------------------------------------
 
-<<<<<<< HEAD
-=======
 import errno
->>>>>>> master
 import os
 
 from contextlib import contextmanager
