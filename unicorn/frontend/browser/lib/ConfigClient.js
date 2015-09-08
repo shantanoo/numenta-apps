@@ -22,10 +22,36 @@
 
 
 /**
- * Fluxible Action: Foo
+ * Unicorn: ConfigClient - Talk to a ConfigServer over IPC or HTTP, gaining
+ *  access to the Node/io.js-layer configuration settings. Connects via HTTP or
+ *  IPC adapter. ConfigClientIPC adpater is currently a pseudo-library, using
+ *  the magic of Electron's `remote` module.
  */
 
-module.exports = (actionContext, payload) => {
-  let dispatcher = actionContext.dispatch('FOO_ACTION', payload);
-  return dispatcher;
-};
+// externals
+
+import isElectronRenderer from 'is-electron-renderer';
+
+// internals
+
+import ConfigClientHTTP from './ConfigClientHTTP';
+
+let ConfigClient;
+
+
+// MAIN
+
+if (isElectronRenderer) { // desktop
+  let remote;
+  try {
+    remote = require('remote');
+  } catch (error) {}
+  ConfigClient = remote.require('./lib/ConfigServer'); // pseduo-ConfigClientIPC
+} else { // web
+  ConfigClient = ConfigClientHTTP;
+}
+
+
+// EXPORT
+
+export default ConfigClient;

@@ -22,34 +22,53 @@
 
 
 /**
- * Fluxible Store: Foo
+ * Unicorn: ConfigServer - Respond to a ConfigClient over IPC, sharing our
+ *  access to the Node/io.js-layer config settings.
+ *
+ * Must be ES5 for now, Electron's `remote` doesn't seem to like ES6 Classes!
  */
 
 // externals
 
-import FluxibleAddons from 'fluxible/addons';
+import nconf from 'nconf';
+import path from 'path';
 
 // internals
 
-let { createStore } = FluxibleAddons;
+const CONFIG_FILE = 'default.json';
+const CONFIG_PATH = path.join('frontend', 'config');
+
+let Defaults = {
+  NODE_ENV: 'development',
+  UNICORN_TARGET: 'desktop',
+  TEST_HOST: 'http://localhost',
+  TEST_PATH: '',
+  TEST_PORT: 8008
+};
 
 
 // MAIN
 
-module.exports = createStore({
-  storeName: 'FooStore',
-  handlers: {
-    'FOO_ACTION': 'fooHandler'
-  },
-  initialize: function () {
-    this.foo = null;
-  },
-  fooHandler: function (payload) {
-    this.foo = payload;
-  },
-  getState: function () {
-    return {
-      foo: this.foo
-    };
-  }
-});
+/**
+ *
+ */
+var ConfigServer = function () {
+  let config = nconf.env().argv().defaults(Defaults);
+
+  config.file(path.join(CONFIG_PATH, CONFIG_FILE));
+  config.file(
+    'environment',
+    path.join(CONFIG_PATH, 'environment.' + config.get('NODE_ENV') + '.json')
+  );
+  config.file(
+    'target',
+    path.join(CONFIG_PATH, 'target.' + config.get('UNICORN_TARGET') + '.json')
+  );
+
+  return config;
+};
+
+
+// EXPORTS
+
+module.exports = ConfigServer;

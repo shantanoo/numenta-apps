@@ -20,7 +20,6 @@
 
 'use strict';
 
-
 /**
  * Unicorn: Cross-platform Desktop Application to showcase basic HTM features
  *  to a user using their own data stream or files.
@@ -30,22 +29,27 @@
 
 // externals
 
-import 'babel/polyfill';  // es6/7 polyfill Array.from()
+import 'babel/polyfill'; // es6/7 polyfill Array.from()
 
 import Fluxible from 'fluxible';
 import FluxibleReact from 'fluxible-addons-react';
 import React from 'react';
 import tapEventInject from 'react-tap-event-plugin';
+import uuid from 'uuid';
 
 // internals
 
-import FooAction from './actions/foo';
-import FooComponent from './components/foo';
-import FooStore from './stores/foo';
+import ListFilesAction from './actions/ListFiles';
+import ListMetricsAction from './actions/ListMetrics';
+import MainComponent from './components/Main';
+import FileStore from './stores/FileStore';
 
+import ConfigClient from './lib/ConfigClient';
 import DatabaseClient from './lib/DatabaseClient';
 import FileClient from './lib/FileClient';
 import ModelClient from './lib/ModelClient';
+
+const config = new ConfigClient();
 
 var databaseClient = new DatabaseClient();
 var fileClient = new FileClient();
@@ -53,60 +57,65 @@ var modelClient = new ModelClient();
 
 let app;
 let context;
-let FooView;
-
 
 // MAIN
 
+// CLIENT LIB EXAMPLES
+var testMetric = {
+  'uid': uuid.v4(),
+  'file_uid': uuid.v4(),
+  'model_uid': null,
+  'name': 'blah',
+  'data': []
+};
+databaseClient.putMetric(testMetric, (error) => {
+  if (error) {
+    throw new Error(error);
+  }
+  databaseClient.getMetrics({}, (error, results) => {
+    if (error) {
+      throw new Error(error);
+    }
+    console.log(results);
+  });
+});
+
+// GUI APP
+
 document.addEventListener('DOMContentLoaded', () => {
 
-  // working example/test of FileClient/Server over IPC
-  fileClient.getFiles(function(error, files) {
-    if(error) throw new Error('cannot get list of files');
-    console.log('sample files:', files);
-
-    fileClient.getFile(files[0], function(error, data) {
-      if(error) throw new Error('cannot get file', files[0]);
-      console.log('first sample file data:', files[0], data.toString());
-    });
-  });
-
-
-  // GUI APP
-
-  window.React = React; // dev tools @TODO remove for non-dev
+  if (config.get('NODE_ENV') !== 'production') {
+    window.React = React; // expose to React dev tools
+  }
 
   tapEventInject(); // @TODO remove when >= React 1.0
 
-  // prepare inital gui context
-  FooView = FluxibleReact.provideContext(
-    FluxibleReact.connectToStores(
-      FooComponent,
-      [ FooStore ],
-      (context, props) => {
-        return context.getStore(FooStore).getState();
-      }
-    )
-  );
-
   // init GUI flux/ible app
   app = new Fluxible({
-    component: FooComponent,
-    stores: [ FooStore ]
+    component: MainComponent,
+    stores: [FileStore]
   });
 
   // add context to app
   context = app.createContext();
 
-  // fire initial app action
-  context.executeAction(FooAction, 'bar', (err) => {
-    let contextEl = FluxibleReact.createElementWithContext(context);
-    // let outputHtml = React.renderToString(contextEl);
-    if(document && ('body' in document)) {
-      React.render(contextEl, document.body);
-      return;
+  // fire initial app action to load all files
+  context.executeAction(ListFilesAction, {}).then((files) => {
+    // Load all metrics
+    Promise.all(files.map((file) => {
+      return context.executeAction(ListMetricsAction, file.filename);
+    })).then(() => {
+      let contextEl = FluxibleReact.createElementWithContext(context);
+      if (document && ('body' in document)) {
+        React.render(contextEl, document.body);
+        return;
+      }
+      throw new Error('React cannot find a DOM document.body to render to.');
+    });
+  }).catch((err) => {
+    if (err) {
+      throw new Error('Unable to start Application:', err);
     }
-    throw new Error('React cannot find a DOM document.body to render to.');
   });
 
 }); // DOMContentLoaded

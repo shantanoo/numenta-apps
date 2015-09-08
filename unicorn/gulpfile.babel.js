@@ -34,15 +34,11 @@ import util from 'gulp-util';
 import webpack from 'webpack';
 import webpacker from 'webpack-stream';
 
-const spawn = child.spawn;
-
 // internals
 
-import config from './package.json';
+import Config from './frontend/lib/ConfigServer';
 
-const HOST = process.env.TEST_HOST || 'http://localhost';
-const PORT = process.env.TEST_PORT || 8008;
-const PATH = process.env.TEST_PATH || '';
+const config = new Config();
 
 let WebServer = null; // @TODO not global
 
@@ -54,11 +50,11 @@ let WebServer = null; // @TODO not global
  */
 gulp.task('mocha-casperjs', (callback) => {
   /*
-  let stream = spawn('mocha-casperjs', [
+  let stream = child.spawn('mocha-casperjs', [
     '--bail',
-    '--TEST_HOST=' + HOST,
-    '--TEST_PORT=' + PORT,
-    '--TEST_PATH=' + PATH
+    '--TEST_HOST=' + config.get('TEST_HOST'),
+    '--TEST_PORT=' + config.get('TEST_PORT'),
+    '--TEST_PATH=' + config.get('TEST_PATH')
   ]);
 
   console.log('Mocha-Casper: started. Output will follow soon...');
@@ -97,7 +93,7 @@ gulp.task('mocha-casperjs', (callback) => {
  */
 gulp.task('serve', () => {
   let stream = gulp.src('.')
-    .pipe(gwebserver({ port: PORT }))
+    .pipe(gwebserver({ port: config.get('TEST_PORT') }))
     .on('error', console.error);
 
   WebServer = stream;
@@ -109,7 +105,8 @@ gulp.task('serve', () => {
  * Gulp task to run WebPack to transpile require/modules/Babel into bundle
  */
 gulp.task('webpack', ()  => {
-  let target = util.env.target || 'web';
+  let target = (config.get('UNICORN_TARGET') === 'desktop') ? 'atom' : 'web';
+
   return gulp.src('frontend/browser/app.js')
     .pipe(webpacker({
       devtool: 'source-map',

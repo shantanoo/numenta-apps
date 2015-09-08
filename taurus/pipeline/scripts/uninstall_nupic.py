@@ -19,44 +19,35 @@
 #
 # http://numenta.org/licenses/
 # ----------------------------------------------------------------------
+#
 
-"""Get state of supervisord"""
-
-from argparse import ArgumentParser
-import socket
+import glob
+import os
+import shutil
 import sys
-import types
-from urlparse import urljoin
-import xmlrpclib
+
+from pip.commands.uninstall import UninstallCommand
 
 
 
-def main():
-  """NOTE: May be called as a setuptools console script"""
+def removePackage(packageName, maxAttempts=10):
+  """ Attempt to gracefully uninstall package with pip, followed by a an eager
+  approach to remove vestiges of namespace packages and previous installations
+  """
 
-  parser = ArgumentParser(
-    description=("Get state of supervisord instance. It will be one of: "
-                 "FATAL, RUNNING, RESTARTNG, or SHUTDOWN. See getState() in "
-                 "http://supervisord.org/api.html\n\n"))
+  UninstallCommand().main([packageName, "--yes", "--disable-pip-version-check"])
 
-  parser.add_argument(
-    "supervisorApiUrl",
-    help="URL of supervisord API; e.g., http://localhost:9001")
+  # Remove vestiges of namespace packages, and other previous installations
 
-  args = parser.parse_args()
+  for path in sys.path:
+    for filename in glob.glob(os.path.join(path, packageName + "*")):
+      print "Removing {}".format(filename)
+      if os.path.isdir(filename):
+        shutil.rmtree(filename)
+      else:
+        os.unlink(filename)
 
-  server = xmlrpclib.Server(urljoin(args.supervisorApiUrl, "RPC2"))
-
-  try:
-    state = server.supervisor.getState()
-  except (socket.error, xmlrpclib.Fault) as ex:
-    sys.exit("Failed to get supervisord state: %r" % (ex))
-
-  assert isinstance(state, types.DictType), (
-    "unexpected result type %s" % type(state))
-
-  print state["statename"],
 
 
 if __name__ == "__main__":
-  main()
+  removePackage("nupic")

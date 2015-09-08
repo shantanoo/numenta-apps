@@ -304,6 +304,7 @@ pushd "${REPOPATH}"
 
   ssh -v -t ${SSH_ARGS} "${TAURUS_SERVER_USER}"@"${TAURUS_SERVER_HOST}" \
     "cd /opt/numenta/products &&
+     ./taurus/pipeline/scripts/uninstall_nupic.py &&
      ./install-taurus.sh \
         /opt/numenta/anaconda/lib/python2.7/site-packages \
         /opt/numenta/anaconda/bin &&
@@ -374,17 +375,7 @@ pushd "${REPOPATH}"
      else
        supervisord -c conf/supervisord.conf
      fi &&
-     for run in {1..6}; do
-       if [[ \$(nta-get-supervisord-state http://localhost:8001) == \"RUNNING\" ]]; then
-         break;
-       fi;
-       if [[ \$run == 6 ]]; then
-         echo \"Timed out waiting for supervisord\" >&2;
-         exit 1;
-       fi;
-       echo \"Waiting for supervisord\" >&2;
-       sleep 5s;
-     done &&
+     nta-wait-for-supervisord-running http://localhost:8001 &&
      ${TAURUS_COLLECTOR_TESTS} &&
      taurus-collectors-set-opmode active &&
      supervisorctl restart all"
